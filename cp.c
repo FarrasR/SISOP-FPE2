@@ -8,8 +8,8 @@ int main (int argc, char* argv[])
 		return -1;
 	}
 	FILE * source, *dest;
-	dest= fopen(argv[1], "w");
-	source= fopen(argv[2], "r");
+	dest= fopen(argv[2], "w");
+	source= fopen(argv[1], "r");
 	char buffer;
 	while ((buffer = fgetc(source))!=EOF)
 	{
