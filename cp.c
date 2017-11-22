@@ -1,18 +1,31 @@
-#include <stdio.h>
+#include "types.h"
+#include "stat.h"
+#include "user.h"
+#include "fcntl.h"
 
-int main (int argc, char* argv[])
-{
-	if (argc>3)
-	{
-		printf("not yet implemented\n");
-		return -1;
+char buf[512];
+
+int main (int argc, char *argv[]) {
+	int fd0,fd1,n;
+
+	if(argc <= 2) {
+		printf(1, "Need 2 arguments\n");
+		exit();
 	}
-	FILE * source, *dest;
-	dest= fopen(argv[2], "w");
-	source= fopen(argv[1], "r");
-	char buffer;
-	while ((buffer = fgetc(source))!=EOF)
-	{
-		fprintf(dest, "%c", buffer);
+
+	if((fd0 = open(argv[1], O_RDONLY)) < 0) {
+		printf(1,"cp: can't open %s\n",argv[1]);
+		exit();
 	}
-}
+	if((fd1 = open(argv[2],O_CREATE|O_RDWR)) < 0) {
+		printf(1,"cp: can't open %s\n",argv[2]);
+		exit();
+	}
+	printf(1,"BERHASIL\n");
+	while ( ( n = read(fd0,buf,sizeof(buf))) > 0) {
+		write(fd1,buf,n);
+	}
+	close(fd0);
+	close(fd1);
+	exit();
+} 
