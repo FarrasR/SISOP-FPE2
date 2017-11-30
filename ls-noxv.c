@@ -22,11 +22,15 @@ void ls (char *path )
 {
 	int fd;
 	fd =open (path,0);
+	if (fd<0)
+	{
+		printf(1,"cannot open path: %s\n", path);
+		return;	
+	}
 	struct stat file_status;
-	char buffer[512];
 	if (fstat(fd, &file_status))
 	{
-		printf("cannot stat path: %s\n", path);
+		printf(1,"cannot stat path: %s\n", path);
 		return;
 	}
 	if(file_status.type ==T_DIR )
@@ -34,7 +38,7 @@ void ls (char *path )
 		struct dirent looker;
 		while (read(fd, &looker, sizeof(looker)) == sizeof(looker))
 		{
-			if (de.inum ==0) continue
+			if (looker.inum ==0) continue;
 			printf(1,"%s\n", looker.name);
 		}
 	}
@@ -42,7 +46,8 @@ void ls (char *path )
 	{
 		printf(1,"%s\n", get_filename(path));
 	}
-
+	close(fd);
+	return;
 }
 
 
@@ -51,13 +56,11 @@ int main(int argc, char *argv[])
   int i;
   if(argc < 2){
     ls(".");
-    return 0;
+    exit();
   }
   for (i=1; i<argc; i++)
    ls(argv[i]);
-
-
-  return 0;
+  exit();
   
   // for(i=1; i<argc; i++)
   //   ls(argv[i]);
