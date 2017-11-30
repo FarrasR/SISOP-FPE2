@@ -1,14 +1,19 @@
-#include <stdio.h>
+#include "types.h"
+#include "stat.h"
+#include "user.h"
+#include "fs.h"
+
+#include "fcntl.h"
 
 int main (int argc, char* argv[])
 {
-	FILE * fw;
-	fw = fopen(argv[1], "w");
-	if (fw==NULL || argc>2)
+	int fw;
+	fw = open(argv[1], O_CREATE | O_RDWR);
+	if (fw<0 || argc>2)
 	{
-		printf("error -.-\n");
-		return -1;
+		printf(1,"error -.-\n");
+		exit();
 	}
-	fclose(fw);
-	return 0;
+	close(fw);
+	exit();
 }
