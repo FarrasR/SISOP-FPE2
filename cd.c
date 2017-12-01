@@ -32,4 +32,5 @@ int main(int argc, char *argv[])
 	}
 	
 	SYS_chdir(argv[1]);
+	exit();
 }
