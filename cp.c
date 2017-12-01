@@ -1,52 +1,81 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
+#include "fs.h"
 #include "fcntl.h"
 
 char buf[512];
 
-int main (int argc, char *argv[]) {
-	int fd0,fd1,n=0;
+void
+cp(int fsource, int fdest)
+{
+  int n;
+  while((n = read(fsource, buf, sizeof(buf))) > 0) {
+    if (write(fdest, buf, n) != n) {
+      printf(1, "cp: write error\n");
+      exit();
+    }
+  }
+  if(n < 0){
+    printf(1, "cp: read error\n");
+    exit();
+  }
+  return;
+}
+int test_dir (char * path)
+{
+  int fd;
+  fd =open (path,O_RDONLY);
+  if (fd<0)
+  {
+    printf(2,"cannot open path: %s\n", path);
+    exit();
+  }
 
-	if(argc <= 2) {
-		printf(1, "Need 2 arguments\n");
-		exit();
-	}
+  struct stat st;
+  if(fstat(fd, &st) < 0){
+    printf(2, "ls: cannot stat %s\n", path);
+    close(fd);
+    exit();
+  }
+  if (st.type == T_FILE)
+  {
+    return 1;
+  }
+  else if (st.type == T_DIR)
+  {
+    return 0;
+  }
+  else 
+    return -1;
+}
 
-	if((fd0 = open(argv[1], O_RDONLY)) < 0) {
-		printf(1,"cp: can't open %s\n",argv[1]);
-		exit();
-	}
+int main(int argc, char *argv[])
+{
+  int fdest, fsource;
 
-	struct stat st;
-	fstat(fd0,&st);
-	if(st.type == T_DIR) {
-		printf(1,"src is a dir. List Files:\n");
+  if(argc < 2){
+    printf(1, "Usage: cp source destination \n");
+    exit();
+  }
+  if((fsource = open(argv[1], 0)) < 0)
+  {
+    printf(1, "cp: cannot open %s\n", argv[1]);
+    exit();
+  }
 
-	char com[128] ={};
-	strcpy(com,argv[2]);
-	int len1 = strlen(argv]1]);
-	int len2 = strlen(argv[2]);
+  if((fdest = open(argv[2], O_CREATE | O_RDWR)) < 0)
+  {
+    printf(1, "cp: cannot open %s\n", argv[2]);
+    exit();
+  }
 
-	if(argv[2][len2-1]=='/') {
-		int i = len1-1;
-		for(; i>=0; i--) {
-			if(argv[1][i]=='/') break;
-		i++;
-		strcpy(&com[len2],&argv[1][i]);
+  if ((test_dir(argv[1])!=1) && (test_dir(argv[2])!=1))
+  {
+    printf(2,"not a file");
+    exit();
+  }
 
-	if((fd1 = open(com,O_CREATE|O_RDWR)) < 0) {
-		printf(1,"cp: can't open %s\n",argv[2]);
-		exit();
-	}
-	printf(1,"BERHASIL\n");
-	while ( ( n = read(fd0,buf,sizeof(buf))) > 0) {
-		write(fd1,buf,n);
-	}
-	close(fd0);
-	close(fd1);
-	exit();
-} 
-
-char* fmtname(char *path) {
-	static char buf[DIRSIZ+1];
+  cp(fsource, fdest);
+  exit();
+}
