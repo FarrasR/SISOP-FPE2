@@ -6,6 +6,7 @@
 
 char buf[512];
 
+
 void
 cp(int fsource, int fdest)
 {
@@ -23,6 +24,34 @@ cp(int fsource, int fdest)
   return;
 }
 
+int test_dir (char * path)
+{
+  int fd;
+  fd =open (path,O_RDONLY);
+  if (fd<0)
+  {
+    printf(2,"cannot open path: %s\n", path);
+    exit();
+  }
+
+  struct stat st;
+  if(fstat(fd, &st) < 0){
+    printf(2, "ls: cannot stat %s\n", path);
+    close(fd);
+    exit();
+  }
+  if (st.type == T_FILE)
+  {
+    return 1;
+  }
+  else if (st.type == T_DIR)
+  {
+    return 0;
+  }
+  else 
+    return -1;
+}
+
 int main(int argc, char *argv[])
 {
   int fdest, fsource;
@@ -31,7 +60,7 @@ int main(int argc, char *argv[])
     printf(1, "Usage: mv source destination \n");
     exit();
   }
-  if((fsource = open(argv[1], 0)) < 0)
+  if((fsource = open(argv[1], 0)) < 0) 
   {
     printf(1, "mv: cannot open %s\n", argv[1]);
     exit();
@@ -42,7 +71,11 @@ int main(int argc, char *argv[])
     printf(1, "mv: cannot open %s\n", argv[2]);
     exit();
   }
-
+  if ((test_dir(argv[1])!=1) && (test_dir(argv[2])!=1))
+  {
+    printf(2,"not a file");
+    exit();
+  }
   cp(fsource, fdest);
   if(unlink(argv[1]) < 0){
     printf(2, "rm: %s failed to delete\n", argv[1]);
