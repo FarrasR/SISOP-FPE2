@@ -60,10 +60,6 @@ void cp(char * source, char * destination)
     exit();
   }
 
-  if(unlink(source) < 0)
-  {
-    printf(2, "rm: %s failed to delete\n", source);
-  }
   while((n = read(fsource, buf, sizeof(buf))) > 0) 
   {
     if (write(fdest, buf, n) != n) 
@@ -72,14 +68,20 @@ void cp(char * source, char * destination)
       exit();
     }
   }
+
   if(n < 0)
   {
     printf(1, "mv: read error\n");
     exit();
   }
+  
+  if(unlink(source) < 0)
+  {
+    printf(2, "rm: %s failed to delete\n", source);
+  }
 }
 
-void wildcard_runner (char * path, char * destination)
+void wildcard (char * path, char * destination)
 {
   char buff_src [512];
   char buff_dest [512];
@@ -107,7 +109,7 @@ void wildcard_runner (char * path, char * destination)
     memmove(walker,looker.name, strlen(looker.name));
 
     if (test_dir (buff_src) == 0)
-      wildcard_runner(buff_src, buff_dest);
+      wildcard(buff_src, buff_dest);
     else if (test_dir (buff_src) == 1)
       cp(buff_src, buff_dest);
     else 
@@ -120,24 +122,46 @@ void wildcard_runner (char * path, char * destination)
   close(fd);
 }
 
-void wildcard (char * path, char * destination)
+int is_same_directory(char * path, char * file)
 {
-  if (test_dir(destination)!= 0)
+  int fd;
+  fd =open (path,0);
+  if (fd<0)
   {
-    printf(2,"syntax: mv * directory\n" );
+    printf(1,"cannot open path: %s\n", path);
+    exit ();
   }
+  struct dirent looker;
+  while (read(fd, &looker, sizeof(looker)) == sizeof(looker))
+  {
+    if (strcmp(looker.name, file)==0)
+      return -1;
+  }
+  return 1;
 }
-
-
-
-
 
 int main(int argc, char *argv[])
 {
-
   if(argc < 2){
     printf(1, "Usage: mv source destination \n");
     exit();
   }
+  if (strcmp(argv[1], "*")==0)
+  {
+    printf(1,"wildcard\n");
+    if (test_dir(argv[2])!=0)
+    {
+      printf(1, "Usage: mv * directory \n");
+      exit();
+    }
+    if (is_same_directory(".", argv[2])==-1)
+    {
+      printf(1, "cannot move %s to it's own subdirectory \n",argv[2]);
+      exit();
+    }
+    wildcard(".", argv[2]);
+    exit();
+  }
+  cp(argv[1], argv[2]);
   exit();
 }
