@@ -6,24 +6,6 @@
 
 char buf[512];
 
-
-void
-cp(int fsource, int fdest)
-{
-  int n;
-  while((n = read(fsource, buf, sizeof(buf))) > 0) {
-    if (write(fdest, buf, n) != n) {
-      printf(1, "mv: write error\n");
-      exit();
-    }
-  }
-  if(n < 0){
-    printf(1, "mv: read error\n");
-    exit();
-  }
-  return;
-}
-
 int test_dir (char * path)
 {
   int fd;
@@ -52,33 +34,110 @@ int test_dir (char * path)
     return -1;
 }
 
+
+void cp(char * source, char * destination)
+{
+  int n;
+  int fdest, fsource;
+  if ((test_dir(destination)!=1))
+  {
+    char * tester = destination +strlen(destination);
+    if (*tester != '/')
+    {
+      *tester++ = '/';
+    }
+    memmove(tester, source, strlen(source));
+  }
+  if((fsource = open(source, 0)) < 0) 
+  {
+    printf(1, "mv: cannot open %s\n", source);
+    exit();
+  }
+
+  if((fdest = open(destination, O_CREATE | O_RDWR)) < 0)
+  {
+    printf(1, "mv: cannot creat %s\n", destination);
+    exit();
+  }
+
+  if(unlink(source) < 0)
+  {
+    printf(2, "rm: %s failed to delete\n", source);
+  }
+  while((n = read(fsource, buf, sizeof(buf))) > 0) 
+  {
+    if (write(fdest, buf, n) != n) 
+    {
+      printf(1, "mv: write error\n");
+      exit();
+    }
+  }
+  if(n < 0)
+  {
+    printf(1, "mv: read error\n");
+    exit();
+  }
+}
+
+void wildcard_runner (char * path, char * destination)
+{
+  char buff_src [512];
+  char buff_dest [512];
+  int fd;
+  fd =open (path,0);
+  if (fd<0)
+  {
+    printf(1,"cannot open path: %s\n", path);
+    return; 
+  }
+  struct dirent looker;
+  char * walker;
+  while (read(fd, &looker, sizeof(looker)) == sizeof(looker))
+  {
+    strcpy(buff_src, path);
+    strcpy(buff_dest, destination);
+
+    if (looker.inum ==0) continue;
+
+    walker= buff_src + strlen(buff_src);
+    if (*walker != '/') *walker++ = '/';
+    memmove(walker,looker.name, strlen(looker.name));
+    walker= buff_dest + strlen(buff_dest);
+    if (*walker != '/') *walker++ = '/';
+    memmove(walker,looker.name, strlen(looker.name));
+
+    if (test_dir (buff_src) == 0)
+      wildcard_runner(buff_src, buff_dest);
+    else if (test_dir (buff_src) == 1)
+      cp(buff_src, buff_dest);
+    else 
+    {
+      printf(2,"cannot open %s\n", buff_dest);
+      exit();
+    }
+
+  }
+  close(fd);
+}
+
+void wildcard (char * path, char * destination)
+{
+  if (test_dir(destination)!= 0)
+  {
+    printf(2,"syntax: mv * directory\n" );
+  }
+}
+
+
+
+
+
 int main(int argc, char *argv[])
 {
-  int fdest, fsource;
 
   if(argc < 2){
     printf(1, "Usage: mv source destination \n");
     exit();
-  }
-  if((fsource = open(argv[1], 0)) < 0) 
-  {
-    printf(1, "mv: cannot open %s\n", argv[1]);
-    exit();
-  }
-
-  if((fdest = open(argv[2], O_CREATE | O_RDWR)) < 0)
-  {
-    printf(1, "mv: cannot open %s\n", argv[2]);
-    exit();
-  }
-  if ((test_dir(argv[1])!=1) && (test_dir(argv[2])!=1))
-  {
-    printf(2,"not a file");
-    exit();
-  }
-  cp(fsource, fdest);
-  if(unlink(argv[1]) < 0){
-    printf(2, "rm: %s failed to delete\n", argv[1]);
   }
   exit();
 }
