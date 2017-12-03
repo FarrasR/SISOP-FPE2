@@ -8,8 +8,8 @@
 void touch(char * to_be_touched)
 {
 	int fw;
-	fw = open(argv[1], O_CREATE | O_RDWR);
-	if (fw<0 )
+	fw = open(to_be_touched, O_CREATE | O_RDWR);
+	if (fw<0)
 	{
 		printf(1,"error -.-\n");
 		exit();
