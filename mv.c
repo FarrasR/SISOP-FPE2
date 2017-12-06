@@ -17,17 +17,19 @@ int test_dir (char * path)
   fd =open (path,O_RDONLY);
   if (fd<0)
   {
-    printf("cannot open path: %s\n", path);
-    sysexit();
+    // printf("cannot open path: %s\n", path);
+    // sysexit();
     // exit();
+    return -1;
   }
 
   struct stat st;
   if(fstat(fd, &st) < 0){
-    printf("ls: cannot stat %s\n", path);
-    close(fd);
-    sysexit();
+    // printf("ls: cannot stat %s\n", path);
+    // close(fd);
+    // sysexit();
     // exit();
+    return -1;
   }
   if (st.type == T_FILE)
   {
@@ -42,55 +44,51 @@ int test_dir (char * path)
 }
 
 
-void cp(char * source, char * destination)
+
+void cp(char* fsource_path, char* fdest_path)
 {
-  int n;
   int fdest, fsource;
-  if ((test_dir(destination)!=1))
+  if (test_dir(fdest_path)==0)
   {
-    char * tester = destination +strlen(destination);
-    if (*tester != '/')
-    {
-      strcat(destination,"/");
-    }
-    strcat(destination, source);
-    // memmove(tester, source, strlen(source));
+    char * test_slash = fdest_path +strlen(fdest_path);
+    if (*test_slash!='/') strcat(fdest_path, "/");
+    strcat(fdest_path, fsource_path);
   }
-  if((fsource = open(source, 0)) < 0) 
+  if ((test_dir(fsource_path)==0))
   {
-    printf("mv: cannot open %s\n", source);
-    sysexit();
-    // exit();
-  }
-
-  if((fdest = open(destination, O_CREAT | O_RDWR)) < 0)
-  {
-    printf("mv: cannot creat %s\n", destination);
-    sysexit();
-    // exit();
-  }
-
-  while((n = read(fsource, buf, sizeof(buf))) > 0) 
-  {
-    if (write(fdest, buf, n) != n) 
-    {
-      printf("mv: write error\n");
-      sysexit();
-      // exit();
-    }
-  }
-  close(fdest);
-  close(fsource);
-  if(n < 0)
-  {
-    printf("mv: read error\n");
+    printf("cp: omitting directory \'%s\'", fsource_path);
     sysexit();
   }
   
-  if(unlink(source) < 0)
+  if((fsource = open(fsource_path, 0)) < 0)
   {
-    printf("rm: %s failed to delete\n", source);
+    printf("cp: cannot open %s\n", fsource_path);
+    sysexit();
   }
+
+  if((fdest = open(fdest_path, O_CREAT | O_RDWR)) < 0)
+  {
+    printf("cp: cannot open %s\n", fdest_path);
+    sysexit();
+  }
+  int n;
+  while((n = read(fsource, buf, sizeof(buf))) > 0) {
+    if (write(fdest, buf, n) != n) {
+      printf("cp: write error\n");
+      sysexit();
+    }
+  }
+  if(n < 0){
+    printf("cp: read error\n");
+    sysexit();
+  }
+  if(unlink(fsource_path) < 0)
+  {
+    printf("rm: %s failed to delete -dir\n", fsource_path);
+  }
+  close(fsource);
+  close(fdest);
+  return;
 }
 
 char * global_destination;
@@ -158,7 +156,7 @@ void wildcard (char * path, char * destination)
       wildcard(buff_src, buff_dest);
       if(unlink(buff_src) < 0)
       {
-        printf("rm: %s failed to delete\n", buff_src);
+        printf("rm: %s failed to delete -dir\n", buff_src);
       }
     }
     else if (test == 1)
