@@ -54,7 +54,7 @@ void cp(char* fsource_path, char* fdest_path)
   if (test_dir(fdest_path)==0)
   {
     char * test_slash = fdest_path +strlen(fdest_path);
-    if (*test_slash!='/') *test_slash++ = '/';
+    if (*test_slash!='/') strcat(fdest_path, "/");
     strcat(fdest_path, fsource_path);
   }
   if ((test_dir(fsource_path)==0))
@@ -181,9 +181,17 @@ void wildcard (char * path, char * destination)
 int main(int argc, char *argv[])
 {
   // counter =0;
-  if(argc < 2 || argc>3){
+  if(argc < 2){
     printf("Usage: cp source destination \n");
     sysexit();
+  }
+  if (argc > 3)
+  {
+    int i;
+    for (i=1; i<argc-1; i++)
+    {
+      cp(argc[i], argv[argc]);
+    }
   }
   if (strcmp(argv[1], "*")==0)
   {

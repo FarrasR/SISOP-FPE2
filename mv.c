@@ -51,7 +51,7 @@ void cp(char * source, char * destination)
     char * tester = destination +strlen(destination);
     if (*tester != '/')
     {
-      *tester++ = '/';
+      strcat(destination,"/")
     }
     strcat(destination, source);
     // memmove(tester, source, strlen(source));
@@ -176,6 +176,14 @@ int main(int argc, char *argv[])
     printf("Usage: mv source destination \n");
     sysexit();
     // exit();
+  }
+  if (argc > 3)
+  {
+    int i;
+    for (i=1; i<argc-1; i++)
+    {
+      cp(argc[i], argv[argc]);
+    }
   }
   if (strcmp(argv[1], "*")==0)
   {
