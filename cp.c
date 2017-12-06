@@ -112,7 +112,7 @@ void wildcard (char * path, char * destination)
     walker= buff_dest + strlen(buff_dest);
     if (*walker != '/') strcat(buff_dest, "/");
 
-    printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
+    // printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
     strcat(buff_src, looker.d_name);
     strcat(buff_src, "\0");
     strcat(buff_dest, looker.d_name);

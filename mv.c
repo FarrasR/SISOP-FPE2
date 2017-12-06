@@ -56,30 +56,29 @@ void cp(char* fsource_path, char* fdest_path)
   }
   if ((test_dir(fsource_path)==0))
   {
-    printf("cp: omitting directory \'%s\'", fsource_path);
+    printf("mv: omitting directory \'%s\'", fsource_path);
     sysexit();
   }
   
   if((fsource = open(fsource_path, 0)) < 0)
   {
-    printf("cp: cannot open %s\n", fsource_path);
+    printf("mv: cannot open %s\n", fsource_path);
     sysexit();
   }
-
   if((fdest = open(fdest_path, O_CREAT | O_RDWR)) < 0)
   {
-    printf("cp: cannot open %s\n", fdest_path);
+    printf("mv: cannot open %s\n", fdest_path);
     sysexit();
   }
   int n;
   while((n = read(fsource, buf, sizeof(buf))) > 0) {
     if (write(fdest, buf, n) != n) {
-      printf("cp: write error\n");
+      printf("mv: write error\n");
       sysexit();
     }
   }
   if(n < 0){
-    printf("cp: read error\n");
+    printf("mv: read error\n");
     sysexit();
   }
   if(unlink(fsource_path) < 0)
@@ -104,7 +103,6 @@ void wildcard (char * path, char * destination)
   }
   struct dirent looker;
   char * walker;  
-  // int temp_number;
   char buff_src [512];
   char buff_dest [512];  
   while (read(fd, &looker, sizeof(looker)) == sizeof(looker))
@@ -114,26 +112,14 @@ void wildcard (char * path, char * destination)
     
     if (strcmp(looker.d_name, ".") ==0 || strcmp(looker.d_name, "..") ==0)
       continue;
-    // if (looker.inum ==0) continue;
-    printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
-    // counter++;
-
-
-    // temp_number= strlen(buff_src);
-    walker= buff_src + strlen(buff_src);
-    if (*walker != '/'){
-       // *walker++ = '/';
-       // temp_number++;
-       strcat(buff_src, "/");
-     }
     
-
-    // temp_number= strlen(buff_dest);
+    // printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
+  
+    walker= buff_src + strlen(buff_src);
+    if (*walker != '/') strcat(buff_src, "/");
+    
     walker= buff_dest + strlen(buff_dest);
-    if (*walker != '/'){
-       // *walker++ = '/';
-      strcat(buff_dest, "/");
-     }
+    if (*walker != '/') strcat(buff_dest, "/");
 
     printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
     strcat(buff_src, looker.d_name);
@@ -141,7 +127,7 @@ void wildcard (char * path, char * destination)
     strcat(buff_dest, looker.d_name);
     strcat(buff_dest, "\0");
 
-    printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
+    // printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
     if (strcmp(global_destination, buff_src)==0)
     {
       printf("cannot copy %s to it's own subdirectory \n",global_destination);
@@ -156,7 +142,7 @@ void wildcard (char * path, char * destination)
       wildcard(buff_src, buff_dest);
       if(unlink(buff_src) < 0)
       {
-        printf("rm: %s failed to delete -dir\n", buff_src);
+        printf("rm: %s failed to delete directory:\n", buff_src);
       }
     }
     else if (test == 1)
@@ -166,10 +152,6 @@ void wildcard (char * path, char * destination)
       printf("cp: cannot open %s\n", buff_src);
       sysexit();
     }
-    // walker= buff_src;
-    // memmove(walker, "0", sizeof(buff_src));
-    // walker= buff_dest;
-    // memmove(walker,"0", sizeof(buff_dest));
   }
 }
 int main(int argc, char *argv[])
@@ -177,7 +159,6 @@ int main(int argc, char *argv[])
   if(argc < 2){
     printf("Usage: mv source destination \n");
     sysexit();
-    // exit();
   }
   if (argc > 3)
   {
@@ -189,25 +170,16 @@ int main(int argc, char *argv[])
   }
   if (strcmp(argv[1], "*")==0)
   {
-    // printf("wildcard\n");
     if (test_dir(argv[2])!=0)
     {
       printf("Usage: mv * directory \n");
       sysexit();
-      // exit();
     }
     global_destination = argv[2];
-    // if (is_same_directory(".", argv[2])==-1)
-    // {
-    //   printf(1, "cannot move %s to it's own subdirectory \n",argv[2]);
-    //   exit();
-    // }
     wildcard(".", argv[2]);
     sysexit();
-    // exit();
   }
   cp(argv[1], argv[2]);
   sysexit();
-  // exit();
 }
 
