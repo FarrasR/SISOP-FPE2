@@ -1,18 +1,18 @@
-#include "types.h"
-#include "stat.h"
-#include "user.h"
-#include "fs.h"
+#include <syscall.h>
+#include <stdio.h>
 
-#include "fcntl.h"
+#include <xv6/stdio.h>
+#include <xv6/fcntl.h>
+// #include <xv6/fs.h>
 
 void touch(char * to_be_touched)
 {
 	int fw;
-	fw = open(to_be_touched, O_CREATE | O_RDWR);
+	fw = open(to_be_touched, O_CREAT | O_RDWR);
 	if (fw<0)
 	{
-		printf(1,"error -.-\n");
-		exit();
+		printf("touch: can't create file: %s\n", to_be_touched);
+		// exit();
 	}
 	close(fw);
 }
@@ -25,6 +25,6 @@ int main (int argc, char* argv[])
 		for (i=1; i<argc;i++)
 			touch(argv[i]);
 	}
-	
-	exit();
-}
+	sysexit();
+	// exit()
+;}

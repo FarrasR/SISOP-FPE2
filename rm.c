@@ -1,13 +1,13 @@
-#include "param.h"
-#include "types.h"
-#include "stat.h"
-#include "user.h"
-#include "fs.h"
-#include "fcntl.h"
-#include "syscall.h"
-#include "traps.h"
-#include "memlayout.h"
+#include <syscall.h>
+#include <stdio.h>
+#include <string.h>
 
+
+#include <xv6/stdio.h>
+#include <xv6/dirent.h>
+#include <xv6/stat.h>
+#include <xv6/fcntl.h>
+#include <xv6/fs.h>
 
 void removethis(char*argv)
 {
@@ -17,8 +17,6 @@ void removethis(char*argv)
     	while(1)
    	unlink(argv);
  	}
-
-
 }
 
 
@@ -30,16 +28,16 @@ main(int argc, char *argv[])
   int i;
 
   if(argc < 2){
-    printf(2, "Usage: rm files...\n");
-    exit();
+    printf( "Usage: rm files...\n");
+    sysexit();
   }
 
   for(i = 1; i < argc; i++){
     if(unlink(argv[i]) < 0){
-      printf(2, "rm: %s failed to delete\n", argv[i]);
+      printf("rm: %s failed to delete\n", argv[i]);
       break;
     }
   }
 
-  exit();
+  sysexit();
 }
