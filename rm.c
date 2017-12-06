@@ -14,7 +14,7 @@ void removethis(char*argv)
 	int fd;
   	fd = open(argv, 0);
   	if(fd >= 0){
-    	while()
+    	while(1)
    	unlink(argv);
  	}
 
