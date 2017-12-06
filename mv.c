@@ -51,7 +51,7 @@ void cp(char * source, char * destination)
     char * tester = destination +strlen(destination);
     if (*tester != '/')
     {
-      strcat(destination,"/")
+      strcat(destination,"/");
     }
     strcat(destination, source);
     // memmove(tester, source, strlen(source));
@@ -156,6 +156,10 @@ void wildcard (char * path, char * destination)
     {
       mkdir(buff_dest);
       wildcard(buff_src, buff_dest);
+      if(unlink(buff_src) < 0)
+      {
+        printf("rm: %s failed to delete\n", buff_src);
+      }
     }
     else if (test == 1)
       cp(buff_src, buff_dest);
@@ -169,7 +173,7 @@ void wildcard (char * path, char * destination)
     // walker= buff_dest;
     // memmove(walker,"0", sizeof(buff_dest));
   }
-
+}
 int main(int argc, char *argv[])
 {
   if(argc < 2){
@@ -208,3 +212,4 @@ int main(int argc, char *argv[])
   sysexit();
   // exit();
 }
+

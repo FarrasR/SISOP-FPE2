@@ -1,9 +1,3 @@
-// #include "types.h"
-// #include "stat.h"
-// #include "user.h"
-// #include "fs.h"
-// #include "fcntl.h"
-
 #include <syscall.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +26,6 @@ int test_dir (char * path)
     printf("ls: cannot stat %s\n", path);
     close(fd);
     sysexit();
-    // exit();
   }
   close(fd);
   if (st.type == T_FILE)
@@ -61,34 +54,29 @@ void cp(char* fsource_path, char* fdest_path)
   {
     printf("cp: omitting directory \'%s\'", fsource_path);
     sysexit();
-    // exit();
   }
   
   if((fsource = open(fsource_path, 0)) < 0)
   {
     printf("cp: cannot open %s\n", fsource_path);
     sysexit();
-    // exit();
   }
 
   if((fdest = open(fdest_path, O_CREAT | O_RDWR)) < 0)
   {
     printf("cp: cannot open %s\n", fdest_path);
     sysexit();
-    // exit();
   }
   int n;
   while((n = read(fsource, buf, sizeof(buf))) > 0) {
     if (write(fdest, buf, n) != n) {
       printf("cp: write error\n");
       sysexit();
-      // exit();
     }
   }
   if(n < 0){
     printf("cp: read error\n");
     sysexit();
-    // exit();
   }
   close(fsource);
   close(fdest);
@@ -97,7 +85,6 @@ void cp(char* fsource_path, char* fdest_path)
 
 
 char* global_destination;
-// int counter;
 void wildcard (char * path, char * destination)
 {
   
@@ -110,7 +97,6 @@ void wildcard (char * path, char * destination)
   }
   struct dirent looker;
   char * walker;  
-  // int temp_number;
   char buff_src [512];
   char buff_dest [512];  
   while (read(fd, &looker, sizeof(looker)) == sizeof(looker))
@@ -120,26 +106,11 @@ void wildcard (char * path, char * destination)
     
     if (strcmp(looker.d_name, ".") ==0 || strcmp(looker.d_name, "..") ==0)
       continue;
-    // if (looker.inum ==0) continue;
-    printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
-    // counter++;
-
-
-    // temp_number= strlen(buff_src);
+    // printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
     walker= buff_src + strlen(buff_src);
-    if (*walker != '/'){
-       // *walker++ = '/';
-       // temp_number++;
-       strcat(buff_src, "/");
-     }
-    
-
-    // temp_number= strlen(buff_dest);
+    if (*walker != '/') strcat(buff_src, "/");
     walker= buff_dest + strlen(buff_dest);
-    if (*walker != '/'){
-       // *walker++ = '/';
-      strcat(buff_dest, "/");
-     }
+    if (*walker != '/') strcat(buff_dest, "/");
 
     printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
     strcat(buff_src, looker.d_name);
@@ -147,7 +118,7 @@ void wildcard (char * path, char * destination)
     strcat(buff_dest, looker.d_name);
     strcat(buff_dest, "\0");
 
-    printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
+    // printf("%s %s %s\n",  buff_src, buff_dest, looker.d_name);
     if (strcmp(global_destination, buff_src)==0)
     {
       printf("cannot copy %s to it's own subdirectory \n",global_destination);
@@ -168,10 +139,6 @@ void wildcard (char * path, char * destination)
       printf("cp: cannot open %s\n", buff_src);
       sysexit();
     }
-    // walker= buff_src;
-    // memmove(walker, "0", sizeof(buff_src));
-    // walker= buff_dest;
-    // memmove(walker,"0", sizeof(buff_dest));
   }
 
   close(fd);
@@ -180,22 +147,35 @@ void wildcard (char * path, char * destination)
 
 int main(int argc, char *argv[])
 {
-  // counter =0;
   if(argc < 2){
     printf("Usage: cp source destination \n");
     sysexit();
   }
+
+  if (strcmp(argv[1], "-r")==0||strcmp(argv[1], "-R")==0)
+  {
+    if (test_dir(argv[3])!=0||test_dir(argv[2])!=0)
+    {
+      printf("Usage: mv -r directory_to_copy  directory_destination \n");
+      sysexit();
+    }
+    global_destination = argv[3];
+    wildcard(argv[2], argv[3]);
+    sysexit();
+  }
+  
   if (argc > 3)
   {
     int i;
-    for (i=1; i<argc-1; i++)
+    for (i=1; i<argc-2; i++)
     {
-      cp(argv[i], argv[argc]);
+      cp(argv[i], argv[argc-1]);
     }
   }
+
   if (strcmp(argv[1], "*")==0)
   {
-    if (test_dir(argv[2])!=0)
+    if (test_dir(argv[2])!=0 || argc>3)
     {
       printf("Usage: mv * directory \n");
       sysexit();
