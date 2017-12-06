@@ -6,30 +6,23 @@
 
 char buf[512];
 
-void
-cp(int fsource, int fdest)
+char * strcat(char * source, char *string_to_be_added)
 {
-  int n;
-  while((n = read(fsource, buf, sizeof(buf))) > 0) {
-    if (write(fdest, buf, n) != n) {
-      printf(1, "cp: write error\n");
-      exit();
-    }
-  }
-  if(n < 0){
-    printf(1, "cp: read error\n");
-    exit();
-  }
-  return;
+  char * concat;
+  concat = source+ sizeof(source);
+  if (*concat!='/')
+    *concat++ = '/';
+  memmove(concat,string_to_be_added, strlen(string_to_be_added));
+  return source;
 }
+
 int test_dir (char * path)
 {
   int fd;
   fd =open (path,O_RDONLY);
   if (fd<0)
   {
-    printf(2,"cannot open path: %s\n", path);
-    exit();
+    return -1;
   }
 
   struct stat st;
@@ -38,6 +31,7 @@ int test_dir (char * path)
     close(fd);
     exit();
   }
+  close(fd);
   if (st.type == T_FILE)
   {
     return 1;
@@ -50,32 +44,149 @@ int test_dir (char * path)
     return -1;
 }
 
-int main(int argc, char *argv[])
+
+void cp(char* fsource_path, char* fdest_path)
 {
   int fdest, fsource;
+  if (test_dir(fdest_path)==0)
+  {
+    fdest_path=strcat(fdest_path, fsource_path);
+  }
+  if ((test_dir(fsource_path)==0))
+  {
+    printf(2,"cp: omitting directory \'%s\'", fsource_path);
+    exit();
+  }
+  
+  if((fsource = open(fsource_path, 0)) < 0)
+  {
+    printf(1, "cp: cannot open %s\n", fsource_path);
+    exit();
+  }
 
-  if(argc < 2){
+  if((fdest = open(fdest_path, O_CREATE | O_RDWR)) < 0)
+  {
+    printf(1, "cp: cannot open %s\n", fdest_path);
+    exit();
+  }
+  int n;
+  while((n = read(fsource, buf, sizeof(buf))) > 0) {
+    if (write(fdest, buf, n) != n) {
+      printf(1, "cp: write error\n");
+      exit();
+    }
+  }
+  if(n < 0){
+    printf(1, "cp: read error\n");
+    exit();
+  }
+  close(fsource);
+  close(fdest);
+  return;
+}
+
+
+char* global_destination;
+int counter;
+void wildcard (char * path, char * destination)
+{
+  char buff_src [512];
+  char buff_dest [512];
+  int fd;
+  fd =open (path,0);
+  if (fd<0)
+  {
+    printf(1,"cannot open path: %s\n", path);
+    return; 
+  }
+  struct dirent looker;
+  char * walker;  
+  int temp_number;
+  while (read(fd, &looker, sizeof(looker)) == sizeof(looker))
+  {
+    
+    strcpy(buff_src, path);
+    strcpy(buff_dest, destination);
+    
+    if (strcmp(looker.name, ".") ==0 || strcmp(looker.name, "..") ==0)
+      continue;
+    if (looker.inum ==0) continue;
+    printf(1,"counter %d\n%s %s %s\n", counter, buff_src, buff_dest, looker.name);
+    counter++;
+
+
+    temp_number= strlen(buff_src);
+    walker= buff_src + temp_number;
+    if (*walker != '/'){
+       *walker++ = '/';
+       temp_number++;
+     }
+    memmove(walker,looker.name, strlen(looker.name));
+    walker=buff_src+temp_number+strlen(looker.name);
+    *walker='\0';
+
+    temp_number= strlen(buff_dest);
+    walker= buff_dest + temp_number;
+    if (*walker != '/'){
+       *walker++ = '/';
+       temp_number++;
+     }
+    memmove(walker,looker.name, strlen(looker.name));
+    walker=buff_src+temp_number+strlen(looker.name);
+    *walker='\0';
+
+
+
+    printf(1,"counter %d\n%s %s %s\n", counter, buff_src, buff_dest);
+    counter++;
+    if (strcmp(global_destination, buff_src)==0)
+    {
+      printf(1, "cannot copy %s to it's own subdirectory \n",global_destination);
+      continue;
+    }
+
+    int test=test_dir (buff_src);
+    
+    if (test == 0)
+      wildcard(buff_src, buff_dest);
+    else if (test == 1)
+      cp(buff_src, buff_dest);
+    else 
+    {
+      printf(2,"wild: cannot open %s\n", buff_src);
+      exit();
+    }
+
+  }
+  close(fd);
+}
+
+
+int main(int argc, char *argv[])
+{
+  counter =0;
+  if(argc < 2 || argc>3){
     printf(1, "Usage: cp source destination \n");
     exit();
   }
-  if((fsource = open(argv[1], 0)) < 0)
+  if (strcmp(argv[1], "*")==0)
   {
-    printf(1, "cp: cannot open %s\n", argv[1]);
+    printf(1,"wildcard\n");
+    if (test_dir(argv[2])!=0)
+    {
+      printf(1, "Usage: mv * directory \n");
+      exit();
+    }
+    global_destination = argv[2];
+    // if (is_same_directory(".", argv[2])==-1)
+    // {
+    //   printf(1, "cannot move %s to it's own subdirectory \n",argv[2]);
+    //   exit();
+    // }
+    wildcard(".", argv[2]);
     exit();
   }
-
-  if((fdest = open(argv[2], O_CREATE | O_RDWR)) < 0)
-  {
-    printf(1, "cp: cannot open %s\n", argv[2]);
-    exit();
-  }
-
-  if ((test_dir(argv[1])!=1) && (test_dir(argv[2])!=1))
-  {
-    printf(2,"not a file");
-    exit();
-  }
-
-  cp(fsource, fdest);
+  
+  cp(argv[1], argv[2]);
   exit();
 }
