@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
     int i;
     for (i=1; i<argc-1; i++)
     {
-      cp(argc[i], argv[argc]);
+      cp(argv[i], argv[argc]);
     }
   }
   if (strcmp(argv[1], "*")==0)
