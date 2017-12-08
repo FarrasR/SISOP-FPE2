@@ -32,8 +32,20 @@ char * get_filename (char * path)
 char * get_space (char * path)
 {
 	static char buf[space+1];
+	
+	// int flexible_space = (strlen(path)/10 +1) * 10;
+	int flexible_space = space;
+	int flexible_length=strlen(path);
+	if (strlen(path) > 13) 
+	{
+		memmove(buf, path, 12);
+		flexible_length = 12;
+		flexible_space=20;
+		memset(buf+flexible_length, ' ', flexible_space- flexible_length);
+		return path;
+	}
 	memmove(buf, path, strlen(path));
-  	memset(buf+strlen(path), ' ', space-strlen(path));
+  	memset(buf+flexible_length, ' ', flexible_space- flexible_length);
 	return buf;
 }
 
@@ -57,7 +69,7 @@ void ls (char *path )
 		struct dirent looker;
 		while (read(fd, &looker, sizeof(looker)) == sizeof(looker))
 		{
-			// if (looker.inum ==0) continue;
+			if (looker.d_ino ==0) continue;
 			printf("%s", get_space(looker.d_name));
 		}
 	}
